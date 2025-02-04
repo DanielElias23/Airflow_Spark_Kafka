@@ -40,3 +40,10 @@
 [2025-02-04T09:02:17.826+0000] {logging_mixin.py:190} INFO - [2025-02-04T09:02:17.826+0000] {dag.py:3239} INFO - Sync 1 DAGs
 [2025-02-04T09:02:17.841+0000] {logging_mixin.py:190} INFO - [2025-02-04T09:02:17.841+0000] {dag.py:4180} INFO - Setting next_dagrun for Pipeline_Datawarehouse to 2025-02-04 06:55:00+00:00, run_after=2025-02-05 06:55:00+00:00
 [2025-02-04T09:02:17.853+0000] {processor.py:208} INFO - Processing /opt/airflow/dags/PIpeline_datawarehouse.py took 0.075 seconds
+[2025-02-04T09:02:48.065+0000] {processor.py:186} INFO - Started process (PID=22833) to work on /opt/airflow/dags/PIpeline_datawarehouse.py
+[2025-02-04T09:02:48.066+0000] {processor.py:914} INFO - Processing file /opt/airflow/dags/PIpeline_datawarehouse.py for tasks to queue
+[2025-02-04T09:02:48.068+0000] {logging_mixin.py:190} INFO - [2025-02-04T09:02:48.067+0000] {dagbag.py:588} INFO - Filling up the DagBag from /opt/airflow/dags/PIpeline_datawarehouse.py
+[2025-02-04T09:02:48.081+0000] {processor.py:925} INFO - DAG(s) 'Pipeline_Datawarehouse' retrieved from /opt/airflow/dags/PIpeline_datawarehouse.py
+[2025-02-04T09:02:48.111+0000] {logging_mixin.py:190} INFO - [2025-02-04T09:02:48.111+0000] {dag.py:3239} INFO - Sync 1 DAGs
+[2025-02-04T09:02:48.127+0000] {logging_mixin.py:190} INFO - [2025-02-04T09:02:48.126+0000] {dag.py:4180} INFO - Setting next_dagrun for Pipeline_Datawarehouse to 2025-02-04 06:55:00+00:00, run_after=2025-02-05 06:55:00+00:00
+[2025-02-04T09:02:48.137+0000] {processor.py:208} INFO - Processing /opt/airflow/dags/PIpeline_datawarehouse.py took 0.077 seconds
