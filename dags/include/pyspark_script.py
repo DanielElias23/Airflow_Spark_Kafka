@@ -2,6 +2,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType, FloatType
 import sys
 import os
+from time import sleep
 from pyspark.sql.functions import col, monotonically_increasing_id
 from pyspark.sql.functions import broadcast
 from dotenv import load_dotenv
@@ -330,9 +331,15 @@ def Payment_History():
 
     df = spark.read.parquet("/datos_compartidos/Order_billing_par", header=True, inferSchema=True)
     df2 = spark.read.parquet("/datos_compartidos/Custormer_val_par", header=True, inferSchema=True)
+    df.show()
+    print(df.count())
+    df2.show()
+    print(df2.count())
     df2 = df2.drop("movieId")
     df2 = df2.drop("timestamp")
-    df_join = df2.join(broadcast(df), "userId", "inner")
+    df_join = df.join(df2, "userId", "left")
+    df_join = df_join.limit(32000000)
+    print(df_join.count())
     df_join.coalesce(1).write.parquet('/datos_compartidos/datawarehouse/Payment_history_par', mode='overwrite')
     df_join.show()
 
@@ -350,7 +357,9 @@ def Product_Catalog():
     df2.show()
     df2 = df2.drop("movieId")
     df2 = df2.drop("timestamp")
-    df_join = df.join(broadcast(df2), "userId", "inner")
+    df_join = df.join(broadcast(df2), "userId", "left")
+    df_join = df_join.limit(32000000)
+    print(df_join.count())
     df_join.coalesce(1).write.parquet('/datos_compartidos/datawarehouse/Products_catalog_par', mode='overwrite')
     df_join.show()
 
@@ -369,7 +378,9 @@ def Order_Billing():
     df = df.drop("userId")
     df = df.drop("tag")
     df2 = df2.drop("timestamp")
-    df_join = df2.join(broadcast(df), "movieId", "inner")
+    df_join = df2.join(broadcast(df), "movieId", "left")
+    df_join = df_join.limit(2000000)
+    print(df_join.count())
     df_join.coalesce(1).write.parquet('/datos_compartidos/Order_billing_par', mode='overwrite')
     df_join.show()
 
@@ -385,9 +396,13 @@ def Inventory_Control():
     df2 = spark.read.parquet("/datos_compartidos/Suppliers_var_par", header=True, inferSchema=True)
     df.show()
     df2.show()
+    df.count()
+    df2.count()
     df2 = df2.drop("movieId")
     df2 = df2.drop("timestamp")
-    df_join = df.join(broadcast(df2), "userId", "inner")
+    df_join = df.join(broadcast(df2), "userId", "left")    
+    df_join = df_join.limit(32000000)
+    print(df_join.count())
     df_join.coalesce(1).write.parquet('/datos_compartidos/datawarehouse/Inventory_control_par', mode='overwrite')
     df_join.show()
 
@@ -410,7 +425,6 @@ def DataMart_Sales():
         "driver": "com.mysql.cj.jdbc.Driver"
     }
     
-    # Opcional: Imprimir el esquema para verificar
     df.printSchema()
     
     df = df.withColumn("partition_id", monotonically_increasing_id())
@@ -437,14 +451,12 @@ def DataMart_Sales():
           .option("upperBound", str(upper_bound)) \
           .mode('overwrite') \
           .save()
-
-        #df.write.jdbc(url=jdbc_url, table='Sales', mode='overwrite', properties=connection_properties)
-        print("DataFrame 'df' escrito en la tabla 'ratings_tags'.")
     except Exception as e:
-        print("Error al escribir 'df':", e)
+        print("Error al escribir data:", e)
     
     spark.stop()
-
+    sleep(10)
+    
 def DataMart_Logistic():
     spark = SparkSession.builder \
         .appName("My Spark App") \
@@ -486,10 +498,12 @@ def DataMart_Logistic():
           .option("upperBound", str(upper_bound)) \
           .mode('overwrite') \
           .save()
-        #df2.write.jdbc(url=jdbc_url, table='Logistic', mode='overwrite', properties=connection_properties)
-        print("DataFrame 'df2' escrito en la tabla 'links_movies'.")
+
     except Exception as e:
-        print("Error al escribir 'df2':", e)
+        print("Error al escribir data:", e)
+    
+    spark.stop()
+    sleep(10)
     
 def DataMart_Marketing():
     spark = SparkSession.builder \
@@ -508,6 +522,7 @@ def DataMart_Marketing():
     
     df3.printSchema()
     
+    df3 = df3.withColumn("partition_id", monotonically_increasing_id())
     partition_column = "partition_id"
     bounds = df3.selectExpr(f"min({partition_column}) as min_value", f"max({partition_column}) as max_value").collect()[0]
     lower_bound = bounds['min_value']
@@ -532,10 +547,12 @@ def DataMart_Marketing():
           .mode('overwrite') \
           .save()
       
-        #df3.write.jdbc(url=jdbc_url, table='Marketing', mode='overwrite', properties=connection_properties)
         print("DataFrame 'df3' escrito en la tabla 'securities_final'.")
     except Exception as e:
-        print("Error al escribir 'df3':", e)
+        print("Error al escribir data:", e)
+    spark.stop()
+    sleep(10)
+    
     
 def DataMart_Customer_Service():
     spark = SparkSession.builder \
@@ -553,7 +570,7 @@ def DataMart_Customer_Service():
     }
     
     df4.printSchema()
-    
+    df4 = df4.withColumn("partition_id", monotonically_increasing_id())
     partition_column = "partition_id"
     bounds = df4.selectExpr(f"min({partition_column}) as min_value", f"max({partition_column}) as max_value").collect()[0]
     lower_bound = bounds['min_value']
@@ -577,11 +594,14 @@ def DataMart_Customer_Service():
           .option("upperBound", str(upper_bound)) \
           .mode('overwrite') \
           .save()
-        #df4.write.jdbc(url=jdbc_url, table='Customer_sevices', mode='overwrite', properties=connection_properties)
-        print("DataFrame 'df4' escrito en la tabla 'prices_final'.")
+          
     except Exception as e:
-        print("Error al escribir 'df4':", e)
-        
+        print("Error al escribir data", e)
+    
+    spark.stop()
+    sleep(10)
+    
+    
 def DataMart_Human_Resource():
     spark = SparkSession.builder \
         .appName("My Spark App") \
@@ -598,7 +618,7 @@ def DataMart_Human_Resource():
     }
     
     df4.printSchema()
-    
+    df4 = df4.withColumn("partition_id", monotonically_increasing_id())
     partition_column = "partition_id"
     bounds = df4.selectExpr(f"min({partition_column}) as min_value", f"max({partition_column}) as max_value").collect()[0]
     lower_bound = bounds['min_value']
@@ -622,11 +642,14 @@ def DataMart_Human_Resource():
           .option("upperBound", str(upper_bound)) \
           .mode('overwrite') \
           .save()
-        #df4.write.jdbc(url=jdbc_url, table='Human_resource', mode='overwrite', properties=connection_properties)
-        print("DataFrame 'df4' escrito en la tabla 'prices_final'.")
+
     except Exception as e:
-        print("Error al escribir 'df4':", e)
+        print("Error al escribir data", e)
         
+    spark.stop()
+    sleep(10)
+    
+     
 def DataMart_Finances():
     spark = SparkSession.builder \
         .appName("My Spark App") \
@@ -643,7 +666,7 @@ def DataMart_Finances():
     }
     
     df4.printSchema()
-    
+    df4 = df4.withColumn("partition_id", monotonically_increasing_id())
     partition_column = "partition_id"
     bounds = df4.selectExpr(f"min({partition_column}) as min_value", f"max({partition_column}) as max_value").collect()[0]
     lower_bound = bounds['min_value']
@@ -667,11 +690,12 @@ def DataMart_Finances():
           .option("upperBound", str(upper_bound)) \
           .mode('overwrite') \
           .save()
-        df4.write.jdbc(url=jdbc_url, table='Finances', mode='overwrite', properties=connection_properties)
-        print("DataFrame 'df4' escrito en la tabla 'prices_final'.")
+
     except Exception as e:
-        print("Error al escribir 'df4':", e)
+        print("Error al escribir data", e)
     
+    spark.stop()
+    sleep(10)
     
 ##############################################################################
                      #EJECUCIÓN DE LAS TAREAS    
